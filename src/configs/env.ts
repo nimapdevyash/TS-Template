@@ -11,9 +11,11 @@ const envSchema = zod.object({
     .default(environment.development),
   PORT: zod.coerce.number().default(8080),
   LOG_LEVEL: zod.enum(Object.values(log_levels)).default(log_levels.info),
-
-  // Example of a required variable (Will throw error if missing)
-  // DATABASE_URL: z.string().url(),
+  MONGO_URI: zod.string(),
+  DB_MAX_RETRIES: zod.coerce.number().default(5),
+  DB_RETRY_INTERVAL: zod.coerce.number().default(5000),
+  HOST: zod.string().default('http://localhost'),
+  APP_VERSION: zod.coerce.number().default(1),
 });
 
 // Safe parse returns a result object rather than throwing immediately
