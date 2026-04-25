@@ -16,6 +16,11 @@ const envSchema = zod.object({
   DB_RETRY_INTERVAL: zod.coerce.number().default(5000),
   HOST: zod.string().default('http://localhost'),
   APP_VERSION: zod.coerce.number().default(1),
+  REDIS_HOST: zod.string(),
+  REDIS_PORT: zod.coerce.number().default(6379),
+  REDIS_PASSWORD: zod.string(),
+  REDIS_RETRY_DELAY_MS: zod.coerce.number().default(5000),
+  REDIS_RETRY_ATTEMPTS: zod.coerce.number().default(50),
 });
 
 // Safe parse returns a result object rather than throwing immediately
