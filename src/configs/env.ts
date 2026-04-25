@@ -21,6 +21,7 @@ const envSchema = zod.object({
   REDIS_PASSWORD: zod.string(),
   REDIS_RETRY_DELAY_MS: zod.coerce.number().default(5000),
   REDIS_RETRY_ATTEMPTS: zod.coerce.number().default(50),
+  REDIS_DEFAULT_TTL: zod.coerce.number().default(86400), // 1 day
 });
 
 // Safe parse returns a result object rather than throwing immediately

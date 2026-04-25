@@ -1,27 +1,33 @@
 import { redisService } from '@/configs/redis.js';
 import { logger } from '@/utils/logger.js';
+import type {
+  CacheSetParams,
+  CacheGetParams,
+  CacheGetOrSetParams,
+  CacheDelParams,
+  CacheInvalidatePatternParams,
+} from '@/utils/interfaces/redis.js';
+import { env } from '@/configs/env.js';
 
 export class CacheService {
-  // Set a value in the cache with an optional TTL (Time To Live).
-  public static async set(
-    key: string,
-    value: unknown,
-    ttlSeconds?: number,
-  ): Promise<void> {
+  private static fetcherPromises = new Map<string, Promise<unknown>>();
+
+  // Serializes and stores a value in Redis with an optional expiration time.
+  public static async set({
+    key,
+    value,
+    ttlSeconds = env.REDIS_DEFAULT_TTL,
+  }: CacheSetParams): Promise<void> {
     try {
       const stringValue = JSON.stringify(value);
-      if (ttlSeconds) {
-        await redisService.client.set(key, stringValue, 'EX', ttlSeconds);
-      } else {
-        await redisService.client.set(key, stringValue);
-      }
+      await redisService.client.set(key, stringValue, 'EX', ttlSeconds);
     } catch (err) {
       logger.error({ err, key }, '❌ CacheService: Failed to set key');
     }
   }
 
-  // Get a parsed value from the cache.
-  public static async get<T>(key: string): Promise<T | null> {
+  // Retrieves a value from Redis and parses it back into its original type.
+  public static async get<T>({ key }: CacheGetParams): Promise<T | null> {
     try {
       const data = await redisService.client.get(key);
       if (!data) return null;
@@ -32,28 +38,34 @@ export class CacheService {
     }
   }
 
-  // Get data if it exists, otherwise fetch it from the DB and cache it.
-  public static async getOrSet<T>(
-    key: string,
-    fetcher: () => Promise<T>,
-    ttlSeconds: number = 3600, // Default 1 hour
-  ): Promise<T> {
-    const cachedData = await this.get<T>(key);
+  // Checks cache for data, otherwise executes the fetcher and caches the result while preventing request overlap.
+  public static async getOrSet<T>({
+    key,
+    fetcher,
+    ttlSeconds = 3600,
+  }: CacheGetOrSetParams<T>): Promise<T> {
+    const cachedData = await this.get<T>({ key });
     if (cachedData) return cachedData;
 
-    // Cache Miss - Fetch from source
-    const freshData = await fetcher();
+    const existingPromise = this.fetcherPromises.get(key);
+    if (existingPromise) return existingPromise as Promise<T>;
 
-    // Save to cache asynchronously (don't await to speed up response)
-    this.set(key, freshData, ttlSeconds).catch((err) =>
+    const fetchPromise = fetcher().finally(() => {
+      this.fetcherPromises.delete(key);
+    });
+
+    this.fetcherPromises.set(key, fetchPromise);
+    const freshData = await fetchPromise;
+
+    this.set({ key, value: freshData, ttlSeconds }).catch((err) =>
       logger.error({ err, key }, '❌ CacheService: Background set failed'),
     );
 
     return freshData;
   }
 
-  // Delete a key from the cache.
-  public static async del(key: string): Promise<void> {
+  // Removes a specific key and its associated data from the Redis store.
+  public static async del({ key }: CacheDelParams): Promise<void> {
     try {
       await redisService.client.del(key);
     } catch (err) {
@@ -61,17 +73,33 @@ export class CacheService {
     }
   }
 
-  /**
-   * Clear multiple keys using a pattern (e.g., "user:*")
-   * USE WITH CAUTION in production on large datasets.
-   */
-  public static async invalidatePattern(pattern: string): Promise<void> {
+  // Iteratively finds and deletes all keys matching a pattern without blocking the Redis server.
+  public static async invalidatePattern({
+    pattern,
+  }: CacheInvalidatePatternParams): Promise<void> {
     try {
-      const keys = await redisService.client.keys(pattern);
-      if (keys.length > 0) {
-        await redisService.client.del(...keys);
+      let cursor = '0';
+      let totalDeleted = 0;
+
+      do {
+        const [nextCursor, keys] = await redisService.client.scan(
+          cursor,
+          'MATCH',
+          pattern,
+          'COUNT',
+          100,
+        );
+        cursor = nextCursor;
+
+        if (keys.length > 0) {
+          await redisService.client.del(...keys);
+          totalDeleted += keys.length;
+        }
+      } while (cursor !== '0');
+
+      if (totalDeleted > 0) {
         logger.info(
-          { pattern, count: keys.length },
+          { pattern, count: totalDeleted },
           '🧹 CacheService: Pattern invalidated',
         );
       }
