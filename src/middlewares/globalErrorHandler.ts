@@ -5,7 +5,7 @@ import { env } from '@/configs/env.js';
 import { ZodError } from 'zod';
 import { environment } from '@/utils/enums/common.js';
 
-export const errorHandler = (
+export const globalErrorHandler = (
   err: any,
   req: Request,
   res: Response,
