@@ -22,17 +22,19 @@ export default tseslint.config(
         ...globals.jest,
       },
       parserOptions: {
-        project: ['./tsconfig.json'], // Helps with advanced TS rules
-        tsconfigRootDir: import.meta.dirname,
+        files: ['**/*.ts'],
+        languageOptions: {
+          parserOptions: {
+            project: ['./tsconfig.json'],
+            tsconfigRootDir: import.meta.dirname,
+          },
+        },
       },
     },
     rules: {
       // Custom Rules
       'prettier/prettier': 'error',
-      '@typescript-eslint/no-unused-vars': [
-        'warn',
-        { argsIgnorePattern: '^_' },
-      ],
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/no-explicit-any': 'warn', // Recommended for production
       'no-console': ['warn', { allow: ['warn', 'error', 'info'] }], // Clean logs
