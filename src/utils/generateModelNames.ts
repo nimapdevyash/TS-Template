@@ -27,9 +27,7 @@ const toCamelCase = (str: string) => {
   const words = prepareWords(str);
   return words
     .map((w, i) =>
-      i === 0
-        ? w.toLowerCase()
-        : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(),
+      i === 0 ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(),
     )
     .join('');
 };
@@ -40,9 +38,7 @@ const generateRegistry = () => {
       .readdirSync(modelsDir)
       .filter(
         (f) =>
-          !f.startsWith('.') &&
-          !f.startsWith('index.') &&
-          (f.endsWith('.ts') || f.endsWith('.js')),
+          !f.startsWith('.') && !f.startsWith('index.') && (f.endsWith('.ts') || f.endsWith('.js')),
       );
 
     const entries = files.map((file) => {
