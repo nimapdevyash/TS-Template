@@ -1,28 +1,5 @@
 import { StatusCodes } from 'http-status-codes';
-
-export class AppError extends Error {
-  public readonly statusCode: number;
-  public readonly isOperational: boolean;
-  public readonly status: 'fail' | 'error';
-
-  constructor(message: string, statusCode: number) {
-    super(message);
-
-    this.statusCode = statusCode;
-    this.status = `${statusCode}`.startsWith('4') ? 'fail' : 'error';
-    this.isOperational = true;
-
-    // Correctly capturing the stack trace, excluding the constructor from the trace
-    Error.captureStackTrace(this, this.constructor);
-
-    /**
-     * NOTE: Set the prototype explicitly.
-     * This is a known TypeScript quirk when extending built-in classes
-     * like Error, Array, or Map in certain build targets.
-     */
-    Object.setPrototypeOf(this, new.target.prototype);
-  }
-}
+import { AppError } from './appError.js';
 
 // 400 - Bad Request
 export class BadRequestError extends AppError {
@@ -63,5 +40,19 @@ export class ConflictError extends AppError {
 export class InternalServerError extends AppError {
   constructor(message: string = 'Something went wrong internally') {
     super(message, StatusCodes.INTERNAL_SERVER_ERROR);
+  }
+}
+
+// 422 - Unprocessable Entity
+export class UnprocessableEntityError extends AppError {
+  constructor(message = 'Unprocessable entity') {
+    super(message, StatusCodes.UNPROCESSABLE_ENTITY);
+  }
+}
+
+// 429 - To Many Requests
+export class TooManyRequestsError extends AppError {
+  constructor(message = 'Too many requests') {
+    super(message, StatusCodes.TOO_MANY_REQUESTS);
   }
 }
