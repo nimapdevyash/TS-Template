@@ -74,9 +74,7 @@ export class CacheService {
   }
 
   // Iteratively finds and deletes all keys matching a pattern without blocking the Redis server.
-  public static async invalidatePattern({
-    pattern,
-  }: CacheInvalidatePatternParams): Promise<void> {
+  public static async invalidatePattern({ pattern }: CacheInvalidatePatternParams): Promise<void> {
     try {
       let cursor = '0';
       let totalDeleted = 0;
@@ -98,16 +96,10 @@ export class CacheService {
       } while (cursor !== '0');
 
       if (totalDeleted > 0) {
-        logger.info(
-          { pattern, count: totalDeleted },
-          '🧹 CacheService: Pattern invalidated',
-        );
+        logger.info({ pattern, count: totalDeleted }, '🧹 CacheService: Pattern invalidated');
       }
     } catch (err) {
-      logger.error(
-        { err, pattern },
-        '❌ CacheService: Pattern invalidation failed',
-      );
+      logger.error({ err, pattern }, '❌ CacheService: Pattern invalidation failed');
     }
   }
 }
