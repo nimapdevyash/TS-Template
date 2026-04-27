@@ -56,16 +56,13 @@ class Database {
       });
 
       mongoose.connection.on('disconnected', () => {
-        console.warn(
-          '⚠️ MongoDB connection lost. Logic in models will wait for reconnect.',
-        );
+        console.warn('⚠️ MongoDB connection lost. Logic in models will wait for reconnect.');
       });
     } catch (error: unknown) {
       this.currentRetry++;
 
       // Type-safe error message extraction
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
 
       if (this.currentRetry < env.DB_MAX_RETRIES) {
         console.warn(

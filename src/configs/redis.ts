@@ -38,9 +38,7 @@ class RedisService {
           retryStrategy: (times: number) => {
             const maxAttempts = env.REDIS_RETRY_ATTEMPTS;
             if (times > maxAttempts) {
-              logger.fatal(
-                `❌ Redis: Max retries (${maxAttempts}) reached. Exiting process.`,
-              );
+              logger.fatal(`❌ Redis: Max retries (${maxAttempts}) reached. Exiting process.`);
               // Delay exit slightly to allow logs to flush
               setTimeout(() => process.exit(1), 1000);
               return null;
@@ -61,12 +59,8 @@ class RedisService {
 
         // Lifecycle Event Listeners
         redis.on('connect', () => logger.info('📡 Redis: Connecting...'));
-        redis.on('ready', () =>
-          logger.info('🚀 Redis Connected: Ready to accept commands'),
-        );
-        redis.on('reconnecting', (ms: number) =>
-          logger.warn(`🔄 Redis: Reconnecting in ${ms}ms`),
-        );
+        redis.on('ready', () => logger.info('🚀 Redis Connected: Ready to accept commands'));
+        redis.on('reconnecting', (ms: number) => logger.warn(`🔄 Redis: Reconnecting in ${ms}ms`));
 
         redis.on('error', (err: Error) => {
           logger.error({ err }, '❌ Redis Error');
@@ -99,9 +93,6 @@ export const redisService = RedisService.getInstance();
 try {
   await redisService.connect();
 } catch (err: unknown) {
-  logger.fatal(
-    { err },
-    '❌ Redis: Startup connection failed. Process exiting.',
-  );
+  logger.fatal({ err }, '❌ Redis: Startup connection failed. Process exiting.');
   process.exit(1);
 }
