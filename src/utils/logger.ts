@@ -1,6 +1,5 @@
 import pino from 'pino';
-
-const isProduction = process.env.NODE_ENV === 'production';
+import { isProduction } from './constants/app.js';
 
 // Use the transport helper to get the correct type
 const transport = isProduction
