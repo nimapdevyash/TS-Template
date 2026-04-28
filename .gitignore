@@ -46,6 +46,7 @@ coverage/
 *.sw?
 # Zed specific
 .zed/
+codebook.toml
 
 # --- OS Specific ---
 .DS_Store
