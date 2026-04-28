@@ -2,7 +2,7 @@ import { pinoHttp } from 'pino-http';
 import { pinoInstance } from '@/configs/logger.js';
 import { env } from '@/configs/env.js';
 import { environment } from '@/utils/enums/common.js';
-import { REQUEST_ID_HEADER } from '@/middlewares/requestId.js';
+import { REQUEST_ID_HEADER } from '@/utils/constants/app.js';
 
 /**
  * HTTP request/response logger.
