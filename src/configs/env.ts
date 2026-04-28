@@ -13,7 +13,10 @@ const envSchema = zod.object({
   DB_MAX_RETRIES: zod.coerce.number().default(5),
   DB_RETRY_INTERVAL: zod.coerce.number().default(5000),
   HOST: zod.string().default('http://localhost'),
-  APP_VERSION: zod.coerce.number().default(1),
+
+  APP_NAME: zod.string().default('api-service'),
+  APP_VERSION: zod.string().default('v1'),
+
   REDIS_HOST: zod.string(),
   REDIS_PORT: zod.coerce.number().default(6379),
   REDIS_PASSWORD: zod.string(),
