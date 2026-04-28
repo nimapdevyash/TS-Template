@@ -121,7 +121,7 @@ export interface CountParams<T> extends WithSession {
 
 // ─── Aggregate ───────────────────────────────────────────────────────────────
 
-export interface AggregateParams<T = unknown> extends WithSession {
+export interface AggregateParams extends WithSession {
   modelName: ModelName;
   /**
    * Must be typed as PipelineStage[] — Mongoose's aggregate() overloads

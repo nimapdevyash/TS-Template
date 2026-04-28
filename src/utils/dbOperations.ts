@@ -338,7 +338,7 @@ export class DbOperations {
     modelName,
     pipeline,
     session = null,
-  }: AggregateParams<TSource>): Promise<TResult[]> {
+  }: AggregateParams): Promise<TResult[]> {
     const model = getModel<TSource>(modelName);
     const aggregation = model.aggregate<TResult>(pipeline);
     if (session) aggregation.session(session);
