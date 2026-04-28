@@ -7,12 +7,12 @@ import { globalErrorHandler } from './middlewares/globalErrorHandler.js';
 import { notFound } from './middlewares/notFound.js';
 import { httpLogger } from './middlewares/httpLogger.js';
 import { env } from './configs/env.js';
-import { requestIdMiddleware } from './middlewares/requestId.js';
+import { assignId } from './middlewares/requestId.js';
 
 const app: Application = express();
 
 // Stamp x-request-id first so every downstream middleware and log line can reference it
-app.use(requestIdMiddleware);
+app.use(assignId);
 
 // HTTP req/res logger — must come after requestId so the ID is always present in logs
 app.use(httpLogger);
