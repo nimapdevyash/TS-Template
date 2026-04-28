@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { Error as MongooseError } from 'mongoose';
 import { ZodError } from 'zod';
-import { logger } from '@/utils/logger.js';
+import { Logger } from '@/utils/logger.js';
 import { env } from '@/configs/env.js';
 import { environment } from '@/utils/enums/common.js';
 import { AppError } from '@/utils/errors/appError.js';
@@ -61,21 +61,17 @@ export const globalErrorHandler = (
   const { appError, extras, originalErr } = normalizers[tag](err);
 
   // ── Logging ──────────────────────────────────────────────────────────────
-  logger.error(
-    {
-      err: {
-        name: appError.name,
-        message: appError.message,
-        statusCode: appError.statusCode,
-        isOperational: appError.isOperational,
-        stack: isDev && originalErr instanceof Error ? originalErr.stack : undefined,
-      },
+  Logger.error({
+    err: originalErr instanceof Error ? originalErr : appError,
+    context: {
       requestId,
       method: req.method,
       url: req.url,
+      statusCode: appError.statusCode,
+      isOperational: appError.isOperational,
     },
-    'Error caught by global handler',
-  );
+    message: 'Error caught by global handler',
+  });
 
   // ── Response ─────────────────────────────────────────────────────────────
   const message = appError.isOperational || isDev ? appError.message : 'Something went very wrong!';

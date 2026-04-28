@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { logger } from '../utils/logger.js';
+import { Logger } from '../utils/logger.js';
 import type { RequestSchema } from '@/utils/types/validate.js';
 import type { ValidatedRequest } from '@/utils/interfaces/validate.js';
 
@@ -63,16 +63,16 @@ export const validate =
 
     const { fieldErrors, formErrors } = z.flattenError(result.error);
 
-    logger.warn(
-      {
+    Logger.warn({
+      context: {
         requestId: req.headers['x-request-id'],
         method: req.method,
         path: req.path,
         fieldErrors,
         formErrors,
       },
-      'Request validation failed',
-    );
+      message: 'Request validation failed',
+    });
 
     res.status(400).json({
       status: 'error',

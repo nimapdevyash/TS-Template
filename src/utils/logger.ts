@@ -1,21 +1,43 @@
-import pino from 'pino';
-import { isProduction } from './constants/app.js';
+import { pinoInstance } from '@/configs/logger.js';
+import type { ErrorLogParams, LogParams } from './interfaces/logger.js';
 
-// Use the transport helper to get the correct type
-const transport = isProduction
-  ? undefined // In prod, we usually log raw JSON to stdout for Loki
-  : pino.transport({
-      target: 'pino-pretty',
-      options: {
-        colorize: true,
-        translateTime: 'SYS:standard',
-        ignore: 'pid,hostname',
+export class Logger {
+  static info({ message, context }: LogParams): void {
+    pinoInstance.info(context ?? {}, message);
+  }
+
+  static warn({ message, context }: LogParams): void {
+    pinoInstance.warn(context ?? {}, message);
+  }
+
+  static debug({ message, context }: LogParams): void {
+    pinoInstance.debug(context ?? {}, message);
+  }
+
+  static error({ message, err, context }: ErrorLogParams): void {
+    pinoInstance.error(
+      {
+        ...context,
+        ...(err !== undefined && {
+          err:
+            err instanceof Error ? { name: err.name, message: err.message, stack: err.stack } : err,
+        }),
       },
-    });
+      message,
+    );
+  }
 
-export const logger = pino(
-  {
-    level: process.env.LOG_LEVEL || 'info',
-  },
-  transport,
-);
+  static fatal({ message, err, context }: ErrorLogParams): void {
+    pinoInstance.fatal(
+      {
+        ...context,
+        ...(err !== undefined && {
+          err:
+            err instanceof Error ? { name: err.name, message: err.message, stack: err.stack } : err,
+        }),
+      },
+      message,
+    );
+    pinoInstance.flush?.();
+  }
+}

@@ -1,6 +1,6 @@
 import { Redis, type RedisOptions } from 'ioredis';
 import { env } from './env.js';
-import { logger } from '../utils/logger.js';
+import { Logger } from '../utils/logger.js';
 
 class RedisService {
   private static instance: RedisService;
@@ -38,7 +38,9 @@ class RedisService {
           retryStrategy: (times: number) => {
             const maxAttempts = env.REDIS_RETRY_ATTEMPTS;
             if (times > maxAttempts) {
-              logger.fatal(`❌ Redis: Max retries (${maxAttempts}) reached. Exiting process.`);
+              Logger.fatal({
+                message: `❌ Redis: Max retries (${maxAttempts}) reached. Exiting process.`,
+              });
               // Delay exit slightly to allow logs to flush
               setTimeout(() => process.exit(1), 1000);
               return null;
@@ -58,18 +60,22 @@ class RedisService {
         const redis = new Redis(options);
 
         // Lifecycle Event Listeners
-        redis.on('connect', () => logger.info('📡 Redis: Connecting...'));
-        redis.on('ready', () => logger.info('🚀 Redis Connected: Ready to accept commands'));
-        redis.on('reconnecting', (ms: number) => logger.warn(`🔄 Redis: Reconnecting in ${ms}ms`));
+        redis.on('connect', () => Logger.info({ message: '📡 Redis: Connecting...' }));
+        redis.on('ready', () =>
+          Logger.info({ message: '🚀 Redis Connected: Ready to accept commands' }),
+        );
+        redis.on('reconnecting', (ms: number) =>
+          Logger.warn({ message: `🔄 Redis: Reconnecting in ${ms}ms` }),
+        );
 
         redis.on('error', (err: Error) => {
-          logger.error({ err }, '❌ Redis Error');
+          Logger.error({ err, message: '❌ Redis Error' });
         });
 
         this._client = redis;
       } catch (error) {
         this._connectingPromise = null;
-        logger.error({ error }, '❌ Redis: Critical initialization failure');
+        Logger.error({ err: error, message: '❌ Redis: Critical initialization failure' });
         throw error;
       }
     })();
@@ -82,7 +88,7 @@ class RedisService {
       await this._client.quit();
       this._client = null;
       this._connectingPromise = null;
-      logger.info('🔌 Redis: Disconnected gracefully');
+      Logger.info({ message: '🔌 Redis: Disconnected gracefully' });
     }
   }
 }
@@ -93,6 +99,9 @@ export const redisService = RedisService.getInstance();
 try {
   await redisService.connect();
 } catch (err: unknown) {
-  logger.fatal({ err }, '❌ Redis: Startup connection failed. Process exiting.');
+  Logger.fatal({
+    err,
+    message: '❌ Redis: Startup connection failed. Process exiting.',
+  });
   process.exit(1);
 }

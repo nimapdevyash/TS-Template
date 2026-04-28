@@ -1,5 +1,5 @@
 import { redisService } from '@/configs/redis.js';
-import { logger } from '@/utils/logger.js';
+import { Logger } from '@/utils/logger.js';
 import type {
   CacheSetParams,
   CacheGetParams,
@@ -22,7 +22,11 @@ export class CacheService {
       const stringValue = JSON.stringify(value);
       await redisService.client.set(key, stringValue, 'EX', ttlSeconds);
     } catch (err) {
-      logger.error({ err, key }, '❌ CacheService: Failed to set key');
+      Logger.error({
+        err,
+        context: { key },
+        message: '❌ CacheService: Failed to set key',
+      });
     }
   }
 
@@ -33,7 +37,11 @@ export class CacheService {
       if (!data) return null;
       return JSON.parse(data) as T;
     } catch (err) {
-      logger.error({ err, key }, '❌ CacheService: Failed to get key');
+      Logger.error({
+        err,
+        context: { key },
+        message: '❌ CacheService: Failed to get key',
+      });
       return null;
     }
   }
@@ -58,7 +66,11 @@ export class CacheService {
     const freshData = await fetchPromise;
 
     this.set({ key, value: freshData, ttlSeconds }).catch((err) =>
-      logger.error({ err, key }, '❌ CacheService: Background set failed'),
+      Logger.error({
+        err,
+        context: { key },
+        message: '❌ CacheService: Background set failed',
+      }),
     );
 
     return freshData;
@@ -69,7 +81,11 @@ export class CacheService {
     try {
       await redisService.client.del(key);
     } catch (err) {
-      logger.error({ err, key }, '❌ CacheService: Failed to delete key');
+      Logger.error({
+        err,
+        context: { key },
+        message: '❌ CacheService: Failed to delete key',
+      });
     }
   }
 
@@ -96,10 +112,17 @@ export class CacheService {
       } while (cursor !== '0');
 
       if (totalDeleted > 0) {
-        logger.info({ pattern, count: totalDeleted }, '🧹 CacheService: Pattern invalidated');
+        Logger.info({
+          context: { pattern, count: totalDeleted },
+          message: '🧹 CacheService: Pattern invalidated',
+        });
       }
     } catch (err) {
-      logger.error({ err, pattern }, '❌ CacheService: Pattern invalidation failed');
+      Logger.error({
+        err,
+        context: { pattern },
+        message: '❌ CacheService: Pattern invalidation failed',
+      });
     }
   }
 }

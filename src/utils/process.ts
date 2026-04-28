@@ -1,4 +1,4 @@
-import { logger } from './logger.js';
+import { Logger } from './logger.js';
 import type { ClosableServer } from './interfaces/closableServer.js';
 
 /**
@@ -7,12 +7,12 @@ import type { ClosableServer } from './interfaces/closableServer.js';
  */
 export const setupProcessHandler = (server?: ClosableServer) => {
   process.on('uncaughtException', (error) => {
-    logger.fatal(error, 'UNCAUGHT EXCEPTION! 💥');
+    Logger.fatal({ err: error, message: 'UNCAUGHT EXCEPTION! 💥' });
     process.exit(1);
   });
 
-  process.on('unhandledRejection', (reason) => {
-    logger.fatal({ reason }, 'UNHANDLED REJECTION! 💥');
+  process.on('unhandledRejection', (reason: unknown) => {
+    Logger.fatal({ err: reason, message: 'UNHANDLED REJECTION! 💥' });
     process.exit(1);
   });
 
@@ -20,11 +20,11 @@ export const setupProcessHandler = (server?: ClosableServer) => {
 
   signals.forEach((signal) => {
     process.on(signal, () => {
-      logger.info(`${signal} received. Starting graceful shutdown...`);
+      Logger.info({ message: `${signal} received. Starting graceful shutdown...` });
 
       // Set a forced timeout just in case close() hangs
       const forceExitTimeout = setTimeout(() => {
-        logger.error('Graceful shutdown timed out. Forcefully exiting.');
+        Logger.error({ message: 'Graceful shutdown timed out. Forcefully exiting.' });
         process.exit(1);
       }, 10000);
 
@@ -32,10 +32,10 @@ export const setupProcessHandler = (server?: ClosableServer) => {
         server.close((err) => {
           clearTimeout(forceExitTimeout); // Clean up the timer
           if (err) {
-            logger.error(err, 'Error during server close');
+            Logger.error({ err, message: 'Error during server close' });
             process.exit(1);
           }
-          logger.info('Server closed successfully.');
+          Logger.info({ message: 'Server closed successfully.' });
           process.exit(0);
         });
       } else {
